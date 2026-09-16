@@ -1,5 +1,4 @@
 ﻿using Emgu.CV;
-using Emgu.CV.CvEnum;
 using WebcamApp.Services;
 using WebcamApp.Filters;
 using System.ComponentModel;
@@ -97,42 +96,12 @@ public partial class MainWindow : Window
                 // Process and apply the filters in the pipeline
                 _imageProcessingService.ProcessImage(frame, _filterPipeline);
 
-                // Create a grayscale copy for histogram calculation
-                using var histogramFrame = new Mat();
-
-                if (frame.NumberOfChannels == 3)
-                {
-                    CvInvoke.CvtColor(
-                        frame,
-                        histogramFrame,
-                        ColorConversion.Bgr2Gray);
-                }
-                else
-                {
-                    frame.CopyTo(histogramFrame);
-                }
-
-                // Calculate and draw the histogram
-                float[] histogram = _histogramService.CalculateHistogram(histogramFrame);
+                // Calculate and draw the grayscale histogram
+                float[] histogram = _histogramService.CalculateHistogram(frame);
                 DrawHistogram(histogram);
 
-                // Convert the processed frame to a WPF-compatible image
-                using var bitmap = frame.ToBitmap();
-                using var stream = new MemoryStream();
-
-                bitmap.Save(
-                    stream,
-                    System.Drawing.Imaging.ImageFormat.Bmp);
-
-                stream.Position = 0;
-
-                var bitmapSource = BitmapFrame.Create(
-                    stream,
-                    BitmapCreateOptions.None,
-                    BitmapCacheOption.OnLoad);
-
-                // Update the webcam image in the UI
-                WebcamImage.Source = bitmapSource;
+                // Display the processed frame
+                DisplayFrame(frame);
 
                 // Delay to control the frame rate
                 await Task.Delay(33, token);
@@ -145,11 +114,9 @@ public partial class MainWindow : Window
 
         // Clean up when the loop ends
         _webcamService.Stop();
-
         _isRunning = false;
         StartButton.IsEnabled = true;
         StopButton.IsEnabled = false;
-
         WebcamImage.Source = null;
         HistogramCanvas.Children.Clear();
     }
@@ -180,6 +147,33 @@ public partial class MainWindow : Window
             HistogramCanvas.Children.Add(bar);
         }
     }
+
+    // Convert an OpenCV Mat to a WPF-compatible image and display it
+    private void DisplayFrame(Mat frame)
+    {
+        //convert the Mat to a Bitmap
+        using var bitmap = frame.ToBitmap();
+
+        //create a memory stream to temporarily hold the bitmap data
+        using var stream = new MemoryStream();
+
+        //save the bitmap into the stream
+        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
+
+        //reset the stream position so it can be read from the beginning
+        stream.Position = 0;
+
+        //create a WPF-compatible BitmapSource from the stream
+        var bitmapSource = BitmapFrame.Create(
+            stream,
+            BitmapCreateOptions.None,
+            BitmapCacheOption.OnLoad);
+
+        //display the frame in the webcam image control
+        WebcamImage.Source = bitmapSource;
+    }
+
+
 
     // Start the webcam
     private async void StartWebcam_Click(object sender, RoutedEventArgs e)

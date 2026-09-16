@@ -6,10 +6,24 @@ namespace WebcamApp.Services;
 public class HistogramService
 {
     //histogram calculation method
-    public float[] CalculateHistogram(Mat grayscaleFrame)
+    public float[] CalculateHistogram(Mat frame)
     {
-         using var hist = new Mat();
-         using var images = new Emgu.CV.Util.VectorOfMat(grayscaleFrame);
+        //create a Mat that will hold the grayscale version of the frame
+        using var grayscaleFrame = new Mat();
+
+        //if the frame is a color image, convert it to grayscale
+        if (frame.NumberOfChannels == 3)
+        {
+            CvInvoke.CvtColor(frame, grayscaleFrame, ColorConversion.Bgr2Gray);
+        }
+        else
+        {
+            //if the frame is already grayscale, just copy it
+            frame.CopyTo(grayscaleFrame);
+        }
+
+        using var hist = new Mat();
+        using var images = new Emgu.CV.Util.VectorOfMat(grayscaleFrame);
 
         // Calculate the histogram for the grayscale image
         CvInvoke.CalcHist(
