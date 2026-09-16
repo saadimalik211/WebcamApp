@@ -35,9 +35,9 @@ namespace WebcamApp.Services
         public Mat? CaptureFrame()
         {
             var frame = new Mat();
-            // Check if the capture is null, if it can read a frame, and if the frame is not empty
+
             if (_capture == null || !_capture.Read(frame) || frame.IsEmpty)
-            { //if it is, we dispose it and return null.
+            { 
                 frame.Dispose();
                 return null;
             }
