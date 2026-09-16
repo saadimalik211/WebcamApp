@@ -209,7 +209,7 @@ public partial class MainWindow : Window
             FilterPipelineList.Items.Add(selectedFilter.GetDisplayName());
         }
     }
-
+    //the if statements in add and remove filter are used because a WPF ListBox.SelectedIndex is -1 when nothing is selected.
     // Remove the selected filter from the pipeline
     private void RemoveFilter_Click(object sender, RoutedEventArgs e)
     {
