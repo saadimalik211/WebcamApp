@@ -107,7 +107,7 @@ public partial class MainWindow : Window
         }
         finally
         {
-            // Clean up when the loop ends
+            // Clean up when the loop ends. set some states. clear the histogram canvas and the webcam image source.
             _webcamService.Stop();
             _isRunning = false;
             StartButton.IsEnabled = true;
