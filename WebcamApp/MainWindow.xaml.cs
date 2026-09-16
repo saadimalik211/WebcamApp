@@ -89,7 +89,7 @@ public partial class MainWindow : Window
 
                 if (frame == null)
                 {
-                    MessageBox.Show("The webcam stopped providing frames.");
+                    MessageBox.Show("The webcam is not providing frames.");
                     break;
                 }
 
