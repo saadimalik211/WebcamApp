@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WebcamApp.Test/WebcamApp.Test.csproj" />
+  <Project Path="WebcamApp/WebcamApp.csproj" />
+</Solution>
