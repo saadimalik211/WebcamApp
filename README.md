@@ -69,13 +69,106 @@ These values can be changed while the webcam is running.
 * Emgu CV
 * xUnit
 
-## Dependencies
+---
 
-The project uses Emgu CV for webcam capture and image processing.
+## Development Environment Setup
 
-The test project uses xUnit for unit testing.
+This is a Windows desktop application (WPF), so development and execution require Windows.
 
-NuGet dependencies are defined in the project files.
+### Prerequisites
+
+| Requirement | Notes |
+|---|---|
+| **OS** | Windows 10/11 (WPF is Windows-only) |
+| **.NET 10 SDK** | Download from https://dotnet.microsoft.com/download — required to build and run the app and tests |
+| **Visual Studio 2022 (17.8+)** | Community edition is sufficient. During installation, select the **.NET desktop development** workload (this includes WPF tooling) |
+| **Webcam** | A physical or virtual webcam accessible to Windows, with an up-to-date driver, is required for the live-capture features |
+| **Git** | For cloning the repository |
+
+### Steps
+
+1. Install the .NET 10 SDK.
+2. Install Visual Studio 2022 with the **.NET desktop development** workload checked.
+3. Clone the repository:
+
+   ```bash
+   git clone <repository-url>
+   cd PracticingWebcam5
+   ```
+4. Confirm the SDK is installed correctly:
+
+   ```bash
+   dotnet --version
+   ```
+
+   This should report a `10.x` version.
+
+## Installing Dependencies
+
+Dependencies are managed via NuGet and are declared in the project files (`.csproj`), so they do not need to be installed manually — restoring the solution downloads them automatically.
+
+**Key NuGet packages used:**
+
+* `Emgu.CV` and `Emgu.CV.runtime.windows` – webcam capture and image processing (OpenCV wrapper)
+* `xunit` and `xunit.runner.visualstudio` – unit testing framework (test project only)
+
+### Option A — Visual Studio
+
+1. Open `PracticingWebcam5.sln` in Visual Studio.
+2. Visual Studio will prompt to restore NuGet packages automatically on load. If it doesn't, right-click the solution in **Solution Explorer** and select **Restore NuGet Packages**.
+
+### Option B — .NET CLI
+
+From the solution's root directory:
+
+```bash
+dotnet restore
+```
+
+This resolves and downloads all dependencies listed in the `.csproj` files for both the main project and the test project.
+
+## Build and Run
+
+### Option A — Visual Studio
+
+1. Open `PracticingWebcam5.sln` in Visual Studio.
+2. Restore NuGet packages (see above, if not done automatically).
+3. Set `PracticingWebcam5` as the **Startup Project** (right-click the project → **Set as Startup Project**), if it isn't already.
+4. Build the solution: **Build → Build Solution** (or `Ctrl+Shift+B`).
+5. Ensure a webcam is available to the computer.
+6. Run the application: **Debug → Start Debugging** (or `F5`), or **Start Without Debugging** (`Ctrl+F5`).
+7. Click **Start Webcam**.
+8. Add filters to the active pipeline as desired.
+9. Adjust filter settings using the sliders.
+
+### Option B — .NET CLI
+
+From the solution root:
+
+```bash
+dotnet build
+dotnet run --project PracticingWebcam5
+```
+
+> **Note:** WPF applications built with the CLI still require Windows to run, since WPF depends on Windows-specific UI frameworks.
+
+## Running Tests
+
+The unit tests are contained in the `PracticingWebcam5.Tests` project and use xUnit.
+
+### Option A — Visual Studio
+
+Use **Test → Run All Tests** (Test Explorer).
+
+### Option B — .NET CLI
+
+From the solution root:
+
+```bash
+dotnet test
+```
+
+---
 
 ## Project Structure
 
@@ -89,6 +182,9 @@ PracticingWebcam5/
     ├── WebcamService.cs
     ├── ImageProcessingService.cs
     └── HistogramService.cs
+
+PracticingWebcam5.Tests/
+    └── (unit tests for image processing and histogram logic)
 ```
 
 ### MainWindow
@@ -129,6 +225,10 @@ Filters that require grayscale conversion perform the conversion when necessary.
 Responsible for calculating the grayscale histogram.
 
 The service uses Emgu CV's histogram functionality to calculate 256 grayscale bins and normalizes the resulting values for display.
+
+### PracticingWebcam5.Tests
+
+Contains the xUnit test project covering the image-processing and histogram logic in isolation from the UI and physical webcam (see [Testing](#testing) below).
 
 ## Processing Pipeline
 
@@ -203,6 +303,10 @@ The physical webcam and real-time UI are intentionally tested at the application
 
 ## Assumptions and Design Decisions
 
+### Development Environment
+
+The application targets Windows only, since WPF has no cross-platform runtime. Development assumes Visual Studio 2022 and the .NET 10 SDK are available; the .NET CLI is supported as an alternative for building, running, and testing outside the IDE.
+
 ### Grayscale Histogram
 
 The histogram represents grayscale intensity values from 0–255.
@@ -232,31 +336,6 @@ The processing service checks the current number of image channels before perfor
 The capture loop uses asynchronous delays to control the frame rate and allow the WPF UI to continue processing user interaction.
 
 The current implementation prioritizes clarity and simplicity appropriate for the scope of this project.
-
-## Running the Application
-
-1. Open the solution in Visual Studio.
-2. Restore NuGet packages.
-3. Build the solution.
-4. Ensure a webcam is available to the computer.
-5. Run the `PracticingWebcam5` project.
-6. Click **Start Webcam**.
-7. Add filters to the active pipeline as desired.
-8. Adjust filter settings using the sliders.
-
-## Running Tests
-
-The unit tests are contained in the `PracticingWebcam5.Tests` project.
-
-Tests can be run from Visual Studio using:
-
-**Test → Run All Tests**
-
-The test project can also be executed using the .NET CLI:
-
-```bash
-dotnet test
-```
 
 ## Sample Output
 
