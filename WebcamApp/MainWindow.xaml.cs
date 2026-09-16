@@ -1,24 +1,14 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using WebcamApp.Services;
+using WebcamApp.Filters;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
 namespace WebcamApp;
-
-// Enum to represent the different image filters
-public enum ImageMode
-{
-    Grayscale,
-    BW,
-    Blur,
-    EdgeDetection,
-    Invert
-}
 
 public partial class MainWindow : Window
 {
@@ -31,14 +21,16 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _cancellationTokenSource;
     private bool _isRunning = false;
 
-    // Filter settings
-    private double _blurValue = 15;
-    private double _edgeLowerValue = 50;
-    private double _edgeUpperValue = 150;
-    private double _bwThresholdValue = 128;
+    // Available configurable filters
+    private readonly BlurFilter _blurFilter = new();
+    private readonly BlackWhiteFilter _blackWhiteFilter = new();
+    private readonly EdgeDetectionFilter _edgeDetectionFilter = new();
+
+    // Available filters
+    private readonly List<IImageProcessingFilter> _availableFilters = new();
 
     // Ordered list of filters in the current pipeline
-    private readonly List<ImageMode> _filterPipeline = new();
+    private readonly List<IImageProcessingFilter> _filterPipeline = new();
 
     public MainWindow()
     {
@@ -51,12 +43,18 @@ public partial class MainWindow : Window
         StartButton.IsEnabled = true;
         StopButton.IsEnabled = false;
 
-        // Add the available filters
-        AvailableFilterList.Items.Add(ImageMode.Grayscale);
-        AvailableFilterList.Items.Add(ImageMode.BW);
-        AvailableFilterList.Items.Add(ImageMode.Blur);
-        AvailableFilterList.Items.Add(ImageMode.EdgeDetection);
-        AvailableFilterList.Items.Add(ImageMode.Invert);
+        // Create the available filters
+        _availableFilters.Add(new GrayscaleFilter());
+        _availableFilters.Add(_blackWhiteFilter);
+        _availableFilters.Add(_blurFilter);
+        _availableFilters.Add(_edgeDetectionFilter);
+        _availableFilters.Add(new InvertFilter());
+
+        // Display the filter names in the UI
+        foreach (var filter in _availableFilters)
+        {
+            AvailableFilterList.Items.Add(filter.GetDisplayName());
+        }
 
         // Subscribe to the Closing event of the window
         this.Closing += MainWindow_Closing;
@@ -72,17 +70,20 @@ public partial class MainWindow : Window
     private async Task CaptureLoop(CancellationToken token)
     {
         try
-        {   // Start the webcam
+        {
+            // Start the webcam
             if (!_webcamService.Start())
             {
                 MessageBox.Show("Unable to open the webcam.");
-                //if webcam fails to open, make sure we set the right state on buttons and isrunning flag.
+
+                // If webcam fails to open, reset application state
                 _isRunning = false;
                 StartButton.IsEnabled = true;
                 StopButton.IsEnabled = false;
 
                 return;
             }
+
             while (!token.IsCancellationRequested)
             {
                 using var frame = _webcamService.CaptureFrame();
@@ -94,20 +95,17 @@ public partial class MainWindow : Window
                 }
 
                 // Process and apply the filters in the pipeline
-                _imageProcessingService.ProcessImage(
-                    frame,
-                    _filterPipeline,
-                    _blurValue,
-                    _edgeLowerValue,
-                    _edgeUpperValue,
-                    _bwThresholdValue);
+                _imageProcessingService.ProcessImage(frame, _filterPipeline);
 
                 // Create a grayscale copy for histogram calculation
                 using var histogramFrame = new Mat();
 
                 if (frame.NumberOfChannels == 3)
                 {
-                    CvInvoke.CvtColor(frame, histogramFrame, ColorConversion.Bgr2Gray);
+                    CvInvoke.CvtColor(
+                        frame,
+                        histogramFrame,
+                        ColorConversion.Bgr2Gray);
                 }
                 else
                 {
@@ -122,11 +120,18 @@ public partial class MainWindow : Window
                 using var bitmap = frame.ToBitmap();
                 using var stream = new MemoryStream();
 
-                bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-                stream.Position = 0;
-                var bitmapSource = BitmapFrame.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                bitmap.Save(
+                    stream,
+                    System.Drawing.Imaging.ImageFormat.Bmp);
 
-                //finally, we set the source of webcamimage and this updates the UI.
+                stream.Position = 0;
+
+                var bitmapSource = BitmapFrame.Create(
+                    stream,
+                    BitmapCreateOptions.None,
+                    BitmapCacheOption.OnLoad);
+
+                // Update the webcam image in the UI
                 WebcamImage.Source = bitmapSource;
 
                 // Delay to control the frame rate
@@ -138,7 +143,7 @@ public partial class MainWindow : Window
             // Handle cancellation gracefully
         }
 
-        // Clean up when the loop is cancelled
+        // Clean up when the loop ends
         _webcamService.Stop();
 
         _isRunning = false;
@@ -204,10 +209,14 @@ public partial class MainWindow : Window
     // Add the selected filter to the pipeline
     private void AddFilter_Click(object sender, RoutedEventArgs e)
     {
-        if (AvailableFilterList.SelectedItem is ImageMode selectedFilter)
+        int selectedIndex = AvailableFilterList.SelectedIndex;
+
+        if (selectedIndex >= 0)
         {
+            IImageProcessingFilter selectedFilter = _availableFilters[selectedIndex];
+
             _filterPipeline.Add(selectedFilter);
-            FilterPipelineList.Items.Add(selectedFilter);
+            FilterPipelineList.Items.Add(selectedFilter.GetDisplayName());
         }
     }
 
@@ -228,7 +237,7 @@ public partial class MainWindow : Window
         object sender,
         RoutedPropertyChangedEventArgs<double> e)
     {
-        _blurValue = e.NewValue;
+        _blurFilter.BlurValue = e.NewValue;
     }
 
     // Edge lower threshold slider
@@ -236,7 +245,7 @@ public partial class MainWindow : Window
         object sender,
         RoutedPropertyChangedEventArgs<double> e)
     {
-        _edgeLowerValue = e.NewValue;
+        _edgeDetectionFilter.LowerThreshold = e.NewValue;
     }
 
     // Edge upper threshold slider
@@ -244,7 +253,7 @@ public partial class MainWindow : Window
         object sender,
         RoutedPropertyChangedEventArgs<double> e)
     {
-        _edgeUpperValue = e.NewValue;
+        _edgeDetectionFilter.UpperThreshold = e.NewValue;
     }
 
     // BW threshold slider
@@ -252,6 +261,6 @@ public partial class MainWindow : Window
         object sender,
         RoutedPropertyChangedEventArgs<double> e)
     {
-        _bwThresholdValue = e.NewValue;
+        _blackWhiteFilter.ThresholdValue = e.NewValue;
     }
 }

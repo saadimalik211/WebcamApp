@@ -1,6 +1,7 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using WebcamApp.Filters;
 using WebcamApp.Services;
 
 namespace WebcamApp.Tests;
@@ -16,19 +17,13 @@ public class ImageProcessingServiceTests
         using var testImage = new Mat(1, 1, DepthType.Cv8U, 3);
         testImage.SetTo(new MCvScalar(100, 150, 200));
 
-        var filters = new List<ImageMode>
+        var filters = new List<IImageProcessingFilter>
         {
-            ImageMode.Grayscale
+            new GrayscaleFilter()
         };
 
         // Act
-        imageProcessingService.ProcessImage(
-            testImage,
-            filters,
-            3,
-            50,
-            150,
-            128);
+        imageProcessingService.ProcessImage(testImage, filters);
 
         // Assert
         Assert.Equal(1, testImage.NumberOfChannels);
@@ -50,24 +45,22 @@ public class ImageProcessingServiceTests
 
         roi.SetTo(new MCvScalar(200, 200, 200));
 
-        var filters = new List<ImageMode>
+        var blackWhiteFilter = new BlackWhiteFilter
         {
-            ImageMode.BW
+            ThresholdValue = 128
+        };
+
+        var filters = new List<IImageProcessingFilter>
+        {
+            blackWhiteFilter
         };
 
         // Act
-        imageProcessingService.ProcessImage(
-            testImage,
-            filters,
-            3,
-            50,
-            150,
-            128);
+        imageProcessingService.ProcessImage(testImage, filters);
 
         // Assert
         Assert.Equal(1, testImage.NumberOfChannels);
 
-        // Check the pixel values
         byte[] pixelData = new byte[2];
         testImage.CopyTo(pixelData);
 
@@ -84,27 +77,23 @@ public class ImageProcessingServiceTests
         using var testImage = new Mat(1, 1, DepthType.Cv8U, 3);
         testImage.SetTo(new MCvScalar(100, 100, 100));
 
-        var filters = new List<ImageMode>
+        var filters = new List<IImageProcessingFilter>
         {
-            ImageMode.Grayscale,
-            ImageMode.Invert
+            new GrayscaleFilter(),
+            new InvertFilter()
         };
 
         // Act
-        imageProcessingService.ProcessImage(
-            testImage,
-            filters,
-            3,
-            50,
-            150,
-            128);
+        imageProcessingService.ProcessImage(testImage, filters);
 
         // Assert
-        Assert.Equal(1, testImage.NumberOfChannels);//grayscale should have just the 1 channel
+        // Grayscale should result in one channel
+        Assert.Equal(1, testImage.NumberOfChannels);
 
         byte[] pixelData = new byte[1];
         testImage.CopyTo(pixelData);
 
-        Assert.Equal(155, pixelData[0]);//invert of 100 is 155 (255 - 100)
+        // Invert of 100 is 155 (255 - 100)
+        Assert.Equal(155, pixelData[0]);
     }
 }
