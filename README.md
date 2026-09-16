@@ -93,7 +93,7 @@ This is a Windows desktop application (WPF), so development and execution requir
 
    ```bash
    git clone <repository-url>
-   cd PracticingWebcam5
+   cd WebcamApp
    ```
 4. Confirm the SDK is installed correctly:
 
@@ -114,7 +114,7 @@ Dependencies are managed via NuGet and are declared in the project files (`.cspr
 
 ### Option A — Visual Studio
 
-1. Open `PracticingWebcam5.sln` in Visual Studio.
+1. Open `WebcamApp.sln` in Visual Studio.
 2. Visual Studio will prompt to restore NuGet packages automatically on load. If it doesn't, right-click the solution in **Solution Explorer** and select **Restore NuGet Packages**.
 
 ### Option B — .NET CLI
@@ -131,9 +131,9 @@ This resolves and downloads all dependencies listed in the `.csproj` files for b
 
 ### Option A — Visual Studio
 
-1. Open `PracticingWebcam5.sln` in Visual Studio.
+1. Open `WebcamApp.sln` in Visual Studio.
 2. Restore NuGet packages (see above, if not done automatically).
-3. Set `PracticingWebcam5` as the **Startup Project** (right-click the project → **Set as Startup Project**), if it isn't already.
+3. Set `WebcamApp` as the **Startup Project** (right-click the project → **Set as Startup Project**), if it isn't already.
 4. Build the solution: **Build → Build Solution** (or `Ctrl+Shift+B`).
 5. Ensure a webcam is available to the computer.
 6. Run the application: **Debug → Start Debugging** (or `F5`), or **Start Without Debugging** (`Ctrl+F5`).
@@ -147,14 +147,14 @@ From the solution root:
 
 ```bash
 dotnet build
-dotnet run --project PracticingWebcam5
+dotnet run --project WebcamApp
 ```
 
 > **Note:** WPF applications built with the CLI still require Windows to run, since WPF depends on Windows-specific UI frameworks.
 
 ## Running Tests
 
-The unit tests are contained in the `PracticingWebcam5.Tests` project and use xUnit.
+The unit tests are contained in the `WebcamApp.Tests` project and use xUnit.
 
 ### Option A — Visual Studio
 
@@ -173,7 +173,7 @@ dotnet test
 ## Project Structure
 
 ```text
-PracticingWebcam5/
+WebcamApp/
 │
 ├── MainWindow.xaml
 ├── MainWindow.xaml.cs
@@ -183,7 +183,7 @@ PracticingWebcam5/
     ├── ImageProcessingService.cs
     └── HistogramService.cs
 
-PracticingWebcam5.Tests/
+WebcamApp.Tests/
     └── (unit tests for image processing and histogram logic)
 ```
 
@@ -226,7 +226,7 @@ Responsible for calculating the grayscale histogram.
 
 The service uses Emgu CV's histogram functionality to calculate 256 grayscale bins and normalizes the resulting values for display.
 
-### PracticingWebcam5.Tests
+### WebcamApp.Tests
 
 Contains the xUnit test project covering the image-processing and histogram logic in isolation from the UI and physical webcam (see [Testing](#testing) below).
 
