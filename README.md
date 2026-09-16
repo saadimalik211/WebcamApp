@@ -183,8 +183,8 @@ Dependencies are managed via NuGet and are declared in the project files (`.cspr
 
 ### Option A — Visual Studio
 
-1. Open the `WebcamApp` project folder in Visual Studio (**File → Open → Folder...**) — there is no top-level `.sln` file in this repo, so open the folder rather than a solution file.
-2. Visual Studio will detect the `WebcamApp` and `WebcamApp.Tests` project files and prompt to restore NuGet packages automatically on load. If it doesn't, right-click a project in **Solution Explorer** and select **Restore NuGet Packages**.
+1. Open **File → Open → Project/Solution...** in Visual Studio and select `WebcamApp.slnx` at the repository root. (Note: this repo uses the newer `.slnx` solution file format, not the classic `.sln`.)
+2. Visual Studio will prompt to restore NuGet packages automatically on load. If it doesn't, right-click the solution in **Solution Explorer** and select **Restore NuGet Packages**.
 
 ### Option B — .NET CLI
 
@@ -200,17 +200,15 @@ This resolves and downloads all dependencies listed in the `.csproj` files for b
 
 ### Option A — Visual Studio
 
-1. Open the `WebcamApp` project folder in Visual Studio (**File → Open → Folder...**), since the repo doesn't include a `.sln` file.
+1. Open **File → Open → Project/Solution...** in Visual Studio and select `WebcamApp.slnx` at the repository root.
 2. Restore NuGet packages (see above, if not done automatically).
-3. If prompted, set `WebcamApp` as the **Startup Project**; otherwise Visual Studio will build every project it detects in the folder.
-4. Build: **Build → Build Solution** (or `Ctrl+Shift+B`) — this builds all detected projects (`WebcamApp` and `WebcamApp.Tests`).
+3. Set `WebcamApp` as the **Startup Project** (right-click the project → **Set as Startup Project**), if it isn't already.
+4. Build the solution: **Build → Build Solution** (or `Ctrl+Shift+B`).
 5. Ensure a webcam is available to the computer.
 6. Run the application: **Debug → Start Debugging** (or `F5`), or **Start Without Debugging** (`Ctrl+F5`).
 7. Click **Start Webcam**.
 8. Add filters to the active pipeline as desired.
 9. Adjust filter settings using the sliders.
-
-> **Tip:** If you'd rather work with a traditional solution file, generate one with `dotnet new sln` followed by `dotnet sln add **/*.csproj` from the repo root, then open the resulting `.sln` in Visual Studio.
 
 ### Option B — .NET CLI
 
