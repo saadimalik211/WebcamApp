@@ -81,14 +81,14 @@ This is a Windows desktop application (WPF), so development and execution requir
 |---|---|
 | **OS** | Windows 10/11 (WPF is Windows-only) |
 | **.NET 10 SDK** | Download from https://dotnet.microsoft.com/download — required to build and run the app and tests |
-| **Visual Studio 2022 (17.8+)** | Community edition is sufficient. During installation, select the **.NET desktop development** workload (this includes WPF tooling) |
+| **Visual Studio 2026 (18.10.1+)** | Community edition is sufficient. During installation, select the **.NET desktop development** workload (this includes WPF tooling) |
 | **Webcam** | A physical or virtual webcam accessible to Windows, with an up-to-date driver, is required for the live-capture features |
 | **Git** | For cloning the repository |
 
 ### Steps
 
 1. Install the .NET 10 SDK.
-2. Install Visual Studio 2022 with the **.NET desktop development** workload checked.
+2. Install Visual Studio 2026 with the **.NET desktop development** workload checked.
 3. Clone the repository:
 
    ```bash
