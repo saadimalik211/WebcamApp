@@ -71,7 +71,9 @@ public partial class MainWindow : Window
         try
         {
             // Start the webcam
-            if (!_webcamService.Start())
+            bool started = await Task.Run(() => _webcamService.Start());
+
+            if (!started)
             {
                 MessageBox.Show("Unable to open the webcam.");
                 return;
