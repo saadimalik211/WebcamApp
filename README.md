@@ -412,17 +412,6 @@ Screenshots of the application running with the webcam feed, filters, and histog
 
 These demonstrate the application's live-view functionality and image-processing output.
 
-## Future Improvements
-
-Possible improvements beyond the current implementation include:
-
-* More robust handling of unavailable or disconnected webcams
-* Additional image-processing filters
-* Improved performance by moving more image processing away from the UI thread
-* A more formal MVVM architecture
-* Additional integration tests
-* An architecture diagram
-
 ## Summary
 
 The application demonstrates a real-time webcam processing pipeline using C#, WPF, and Emgu CV.
