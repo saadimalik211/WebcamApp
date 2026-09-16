@@ -1,4 +1,4 @@
-# PracticingWebcam5
+# WebcamApp
 
 A C# WPF application that captures a live webcam feed, applies configurable image-processing filters, converts frames to grayscale for histogram analysis, and displays the resulting grayscale histogram in real time.
 
