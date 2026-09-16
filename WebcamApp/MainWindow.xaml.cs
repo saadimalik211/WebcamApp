@@ -74,12 +74,6 @@ public partial class MainWindow : Window
             if (!_webcamService.Start())
             {
                 MessageBox.Show("Unable to open the webcam.");
-
-                // If webcam fails to open, reset application state
-                _isRunning = false;
-                StartButton.IsEnabled = true;
-                StopButton.IsEnabled = false;
-
                 return;
             }
 
@@ -111,14 +105,16 @@ public partial class MainWindow : Window
         {
             // Handle cancellation gracefully
         }
-
-        // Clean up when the loop ends
-        _webcamService.Stop();
-        _isRunning = false;
-        StartButton.IsEnabled = true;
-        StopButton.IsEnabled = false;
-        WebcamImage.Source = null;
-        HistogramCanvas.Children.Clear();
+        finally
+        {
+            // Clean up when the loop ends
+            _webcamService.Stop();
+            _isRunning = false;
+            StartButton.IsEnabled = true;
+            StopButton.IsEnabled = false;
+            WebcamImage.Source = null;
+            HistogramCanvas.Children.Clear();
+        }
     }
 
     private void DrawHistogram(float[] histogram)
