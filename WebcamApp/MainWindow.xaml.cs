@@ -129,7 +129,7 @@ public partial class MainWindow : Window
         for (int i = 0; i < 256; i++)
         {
             var bar = new System.Windows.Shapes.Rectangle
-            {
+            { //filling the canvas with rectangles for histogram bars
                 Width = HistogramCanvas.ActualWidth / 256,
                 Height = histogram[i] * HistogramCanvas.ActualHeight,
                 Fill = System.Windows.Media.Brushes.Black
