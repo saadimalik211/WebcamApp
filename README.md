@@ -305,7 +305,7 @@ The physical webcam and real-time UI are intentionally tested at the application
 
 ### Development Environment
 
-The application targets Windows only, since WPF has no cross-platform runtime. Development assumes Visual Studio 2022 and the .NET 10 SDK are available; the .NET CLI is supported as an alternative for building, running, and testing outside the IDE.
+The application targets Windows only, since WPF has no cross-platform runtime. Development assumes Visual Studio 2026 and the .NET 10 SDK are available; the .NET CLI is supported as an alternative for building, running, and testing outside the IDE.
 
 ### Grayscale Histogram
 
