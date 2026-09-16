@@ -8,6 +8,22 @@ namespace WebcamApp.Tests;
 public class HistogramServiceTests
 {
     [Fact]
+    public void CalculateHistogram_ShouldReturn256Bins()
+    {
+        // Arrange
+        var histogramService = new HistogramService();
+
+        using var testImage = new Mat(3, 3, DepthType.Cv8U, 1); // Create a 3x3 grayscale image
+        testImage.SetTo(new MCvScalar(128));
+
+        // Act
+        float[] histogram = histogramService.CalculateHistogram(testImage);
+
+        // Assert
+        Assert.Equal(256, histogram.Length);
+    }
+
+    [Fact]
     public void CalculateHistogram_ShouldReturnExpectedHistogram()
     {
         // Arrange
