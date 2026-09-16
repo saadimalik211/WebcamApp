@@ -20,6 +20,75 @@ The main goals of the implementation are:
 * Separation of webcam capture, image processing, and histogram calculation
 * Unit testing of image-processing functionality
 
+## Architecture
+
+The application separates UI presentation, webcam capture, image processing, filter implementations, and histogram calculation.
+
+```text
+                         ┌─────────────────────┐
+                         │       Webcam        │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │   WebcamService     │
+                         │                     │
+                         │  • Start camera     │
+                         │  • Capture frames   │
+                         │  • Stop camera      │
+                         └──────────┬──────────┘
+                                    │
+                              Mat frame
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────┐
+│                         MainWindow                            │
+│                         WPF / UI                              │
+│                                                               │
+│  • Start / Stop controls                                     │
+│  • Filter selection                                          │
+│  • Filter sliders                                            │
+│  • Coordinates frame processing                              │
+│  • Displays webcam image                                     │
+│  • Draws histogram                                           │
+└───────────────┬───────────────────────────────┬───────────────┘
+                │                               │
+                │ Mat + Filter Pipeline         │ Processed Mat
+                ▼                               ▼
+┌───────────────────────────┐       ┌───────────────────────────┐
+│ ImageProcessingService    │       │    HistogramService       │
+│                           │       │                           │
+│ Executes filters in       │       │ • Convert to grayscale    │
+│ pipeline order            │       │ • Calculate 256-bin       │
+└─────────────┬─────────────┘       │   histogram               │
+              │                     └─────────────┬─────────────┘
+              ▼                                   │
+┌───────────────────────────┐                float[256]
+│ IImageProcessingFilter    │                     │
+│                           │                     ▼
+│ • GetDisplayName()        │              ┌───────────────┐
+│ • ProcessImage()          │              │ DrawHistogram │
+└─────────────┬─────────────┘              └───────┬───────┘
+              │                                    │
+       implementations                             ▼
+              │                            Histogram Canvas
+      ┌───────┼────────┬──────────┬──────────┐
+      │       │        │          │          │
+      ▼       ▼        ▼          ▼          ▼
+ Grayscale   B&W      Blur       Edge      Invert
+  Filter    Filter    Filter     Filter     Filter
+```
+
+### Processing Flow
+
+```text
+Webcam → WebcamService → MainWindow → ImageProcessingService → Filter Pipeline
+
+Processed Frame → HistogramService → Histogram Canvas
+
+Processed Frame → Webcam Image
+```
+
 ## Features
 
 ### Live Webcam
