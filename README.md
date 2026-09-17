@@ -17,77 +17,11 @@ The main goals of the implementation are:
 * Real-time grayscale histogram generation
 * Multiple user-selectable image filters
 * Configurable filter parameters
-* Separation of webcam capture, image processing, and histogram calculation
+* Ordered filter processing
+* Separation of webcam capture, image processing, filter implementations, and histogram calculation
 * Unit testing of image-processing functionality
 
-## Architecture
-
-The application separates UI presentation, webcam capture, image processing, filter implementations, and histogram calculation.
-
-```text
-                         ┌─────────────────────┐
-                         │       Webcam        │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   WebcamService     │
-                         │                     │
-                         │  • Start camera     │
-                         │  • Capture frames   │
-                         │  • Stop camera      │
-                         └──────────┬──────────┘
-                                    │
-                              Mat frame
-                                    │
-                                    ▼
-┌───────────────────────────────────────────────────────────────┐
-│                         MainWindow                            │
-│                         WPF / UI                              │
-│                                                               │
-│  • Start / Stop controls                                     │
-│  • Filter selection                                          │
-│  • Filter sliders                                            │
-│  • Coordinates frame processing                              │
-│  • Displays webcam image                                     │
-│  • Draws histogram                                           │
-└───────────────┬───────────────────────────────┬───────────────┘
-                │                               │
-                │ Mat + Filter Pipeline         │ Processed Mat
-                ▼                               ▼
-┌───────────────────────────┐       ┌───────────────────────────┐
-│ ImageProcessingService    │       │    HistogramService       │
-│                           │       │                           │
-│ Executes filters in       │       │ • Convert to grayscale    │
-│ pipeline order            │       │ • Calculate 256-bin       │
-└─────────────┬─────────────┘       │   histogram               │
-              │                     └─────────────┬─────────────┘
-              ▼                                   │
-┌───────────────────────────┐                float[256]
-│ IImageProcessingFilter    │                     │
-│                           │                     ▼
-│ • GetDisplayName()        │              ┌───────────────┐
-│ • ProcessImage()          │              │ DrawHistogram │
-└─────────────┬─────────────┘              └───────┬───────┘
-              │                                    │
-       implementations                             ▼
-              │                            Histogram Canvas
-      ┌───────┼────────┬──────────┬──────────┐
-      │       │        │          │          │
-      ▼       ▼        ▼          ▼          ▼
- Grayscale   B&W      Blur       Edge      Invert
-  Filter    Filter    Filter     Filter     Filter
-```
-
-### Processing Flow
-
-```text
-Webcam → WebcamService → MainWindow → ImageProcessingService → Filter Pipeline
-
-Processed Frame → HistogramService → Histogram Canvas
-
-Processed Frame → Webcam Image
-```
+---
 
 ## Features
 
@@ -96,6 +30,7 @@ Processed Frame → Webcam Image
 * Start and stop the webcam from the UI.
 * Continuously captures frames while the webcam is running.
 * The live feed updates approximately every 33 milliseconds.
+* Webcam initialization runs on a background thread to prevent the WPF UI from freezing while the camera opens.
 
 ### Grayscale Histogram
 
@@ -130,6 +65,8 @@ The application provides adjustable parameters for:
 
 These values can be changed while the webcam is running.
 
+---
+
 ## Technologies
 
 * C#
@@ -146,24 +83,27 @@ This is a Windows desktop application (WPF), so development and execution requir
 
 ### Prerequisites
 
-| Requirement | Notes |
-|---|---|
-| **OS** | Windows 10/11 (WPF is Windows-only) |
-| **.NET 10 SDK** | Download from https://dotnet.microsoft.com/download — required to build and run the app and tests |
+| Requirement                       | Notes                                                                                                                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **OS**                            | Windows 10/11 (WPF is Windows-only)                                                                                                |
+| **.NET 10 SDK**                   | Download from https://dotnet.microsoft.com/download — required to build and run the app and tests                                  |
 | **Visual Studio 2026 (18.10.1+)** | Community edition is sufficient. During installation, select the **.NET desktop development** workload (this includes WPF tooling) |
-| **Webcam** | A physical or virtual webcam accessible to Windows, with an up-to-date driver, is required for the live-capture features |
-| **Git** | For cloning the repository |
+| **Webcam**                        | A physical or virtual webcam accessible to Windows, with an up-to-date driver, is required for the live-capture features           |
+| **Git**                           | For cloning the repository                                                                                                         |
 
 ### Steps
 
 1. Install the .NET 10 SDK.
+
 2. Install Visual Studio 2026 with the **.NET desktop development** workload checked.
+
 3. Clone the repository:
 
    ```bash
    git clone <repository-url>
    cd WebcamApp
    ```
+
 4. Confirm the SDK is installed correctly:
 
    ```bash
@@ -172,9 +112,11 @@ This is a Windows desktop application (WPF), so development and execution requir
 
    This should report a `10.x` version.
 
+---
+
 ## Installing Dependencies
 
-Dependencies are managed via NuGet and are declared in the project files (`.csproj`), so they do not need to be installed manually — restoring the solution downloads them automatically.
+Dependencies are managed via NuGet and are declared in the project files (`.csproj`), so they do not need to be installed manually. Restoring the solution downloads them automatically.
 
 **Key NuGet packages used:**
 
@@ -183,12 +125,12 @@ Dependencies are managed via NuGet and are declared in the project files (`.cspr
 
 ### Option A — Visual Studio
 
-1. Open **File → Open → Project/Solution...** in Visual Studio and select `WebcamApp.slnx` at the repository root. (Note: this repo uses the newer `.slnx` solution file format, not the classic `.sln`.)
-2. Visual Studio will prompt to restore NuGet packages automatically on load. If it doesn't, right-click the solution in **Solution Explorer** and select **Restore NuGet Packages**.
+1. Open **File → Open → Project/Solution...** in Visual Studio and select `WebcamApp.slnx` at the repository root. This repository uses the newer `.slnx` solution file format rather than the classic `.sln`.
+2. Visual Studio will normally restore NuGet packages automatically when the solution is loaded. If it does not, right-click the solution in **Solution Explorer** and select **Restore NuGet Packages**.
 
 ### Option B — .NET CLI
 
-From the repository's root directory:
+From the repository root:
 
 ```bash
 dotnet restore
@@ -196,16 +138,18 @@ dotnet restore
 
 This resolves and downloads all dependencies listed in the `.csproj` files for both the main project and the test project.
 
+---
+
 ## Build and Run
 
 ### Option A — Visual Studio
 
 1. Open **File → Open → Project/Solution...** in Visual Studio and select `WebcamApp.slnx` at the repository root.
-2. Restore NuGet packages (see above, if not done automatically).
-3. Set `WebcamApp` as the **Startup Project** (right-click the project → **Set as Startup Project**), if it isn't already.
-4. Build the solution: **Build → Build Solution** (or `Ctrl+Shift+B`).
+2. Restore NuGet packages if they were not restored automatically.
+3. Set `WebcamApp` as the **Startup Project** if it is not already.
+4. Build the solution using **Build → Build Solution** or `Ctrl+Shift+B`.
 5. Ensure a webcam is available to the computer.
-6. Run the application: **Debug → Start Debugging** (or `F5`), or **Start Without Debugging** (`Ctrl+F5`).
+6. Run the application using **Debug → Start Debugging** (`F5`) or **Start Without Debugging** (`Ctrl+F5`).
 7. Click **Start Webcam**.
 8. Add filters to the active pipeline as desired.
 9. Adjust filter settings using the sliders.
@@ -219,7 +163,9 @@ dotnet build
 dotnet run --project WebcamApp
 ```
 
-> **Note:** WPF applications built with the CLI still require Windows to run, since WPF depends on Windows-specific UI frameworks.
+> **Note:** WPF applications built with the CLI still require Windows to run because WPF depends on Windows-specific UI frameworks.
+
+---
 
 ## Running Tests
 
@@ -227,7 +173,7 @@ The unit tests are contained in the `WebcamApp.Tests` project and use xUnit.
 
 ### Option A — Visual Studio
 
-Use **Test → Run All Tests** (Test Explorer).
+Use **Test → Run All Tests** from Test Explorer.
 
 ### Option B — .NET CLI
 
@@ -247,13 +193,23 @@ WebcamApp/
 ├── MainWindow.xaml
 ├── MainWindow.xaml.cs
 │
+├── Filters/
+│   ├── IImageProcessingFilter.cs
+│   ├── GrayscaleFilter.cs
+│   ├── BlackWhiteFilter.cs
+│   ├── BlurFilter.cs
+│   ├── EdgeDetectionFilter.cs
+│   └── InvertFilter.cs
+│
 └── Services/
     ├── WebcamService.cs
     ├── ImageProcessingService.cs
     └── HistogramService.cs
 
 WebcamApp.Tests/
-    └── (unit tests for image processing and histogram logic)
+│
+├── HistogramServiceTests.cs
+└── ImageProcessingServiceTests.cs
 ```
 
 ### MainWindow
@@ -265,8 +221,9 @@ This includes:
 * Start/stop controls
 * Filter selection
 * Filter settings
+* Coordinating frame processing
 * Displaying the webcam image
-* Displaying the histogram
+* Drawing and displaying the histogram
 * Running the capture loop
 
 ### WebcamService
@@ -283,44 +240,161 @@ Keeping webcam functionality in its own service separates device interaction fro
 
 ### ImageProcessingService
 
-Responsible for applying the configured filter pipeline.
+Responsible for executing the configured filter pipeline.
 
-The service receives a frame and the active filter list, then processes each filter sequentially.
+The service receives a frame and the active ordered filter list. It processes each filter sequentially using the common `IImageProcessingFilter` interface.
 
-Filters that require grayscale conversion perform the conversion when necessary.
+Because the service works with the interface rather than individual concrete filter types, it does not need to know which specific filters are currently in the pipeline.
+
+### Image Processing Filters
+
+Image-processing filters implement the `IImageProcessingFilter` interface.
+
+The interface defines the common operations required by each filter:
+
+* `GetDisplayName()` – provides the filter name displayed in the UI.
+* `ProcessImage(Mat frame)` – applies the filter to the current frame.
+
+Concrete implementations include:
+
+* `GrayscaleFilter`
+* `BlackWhiteFilter`
+* `BlurFilter`
+* `EdgeDetectionFilter`
+* `InvertFilter`
+
+Each filter owns its specific image-processing behavior and any configurable values it requires.
+
+This allows `ImageProcessingService` to process an ordered list of filters without needing to know the specific filter types in the pipeline.
+
+Filters modify the supplied `Mat` in place rather than returning a new image.
 
 ### HistogramService
 
 Responsible for calculating the grayscale histogram.
 
-The service uses Emgu CV's histogram functionality to calculate 256 grayscale bins and normalizes the resulting values for display.
+The service accepts the processed frame. If the frame is still a color image, it creates a grayscale copy specifically for histogram calculation.
+
+Emgu CV's histogram functionality is then used to calculate 256 grayscale intensity bins. The resulting histogram is normalized for display and returned as a `float[256]`.
 
 ### WebcamApp.Tests
 
-Contains the xUnit test project covering the image-processing and histogram logic in isolation from the UI and physical webcam (see [Testing](#testing) below).
+Contains the xUnit test project covering image-processing and histogram logic in isolation from the WPF UI and physical webcam.
 
-## Processing Pipeline
+---
 
-The general processing flow is:
+## Architecture
+
+The application separates UI presentation and coordination, webcam interaction, image processing, individual filter implementations, and histogram calculation.
 
 ```text
-Webcam
-   │
-   ▼
+                         ┌─────────────────────┐
+                         │       Webcam        │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │   WebcamService     │
+                         │                     │
+                         │  • Start camera     │
+                         │  • Capture frames   │
+                         │  • Stop camera      │
+                         └──────────┬──────────┘
+                                    │
+                                Mat frame
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │     MainWindow      │
+                         │      WPF / UI       │
+                         └──────────┬──────────┘
+                                    │
+                         Mat + Filter Pipeline
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │ ImageProcessing     │
+                         │ Service             │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │IImageProcessingFilter│
+                         └──────────┬──────────┘
+                                    │
+                              implementations
+                                    │
+                 ┌────────┬─────────┼─────────┬────────┐
+                 ▼        ▼         ▼         ▼        ▼
+             Grayscale   B&W       Blur      Edge    Invert
+                 │        │         │         │        │
+                 └────────┴─────────┴─────────┴────────┘
+                                    │
+                          Mat modified in place
+                                    │
+                                    ▼
+                              MainWindow
+                               │       │
+                 Processed Mat │       │ Processed Mat
+                               ▼       ▼
+                       Histogram     DisplayFrame
+                        Service          │
+                           │             ▼
+                      float[256]     Webcam Image
+                           │
+                           ▼
+                    DrawHistogram
+                           │
+                           ▼
+                    Histogram Canvas
+```
+
+### Component Responsibilities
+
+The main responsibilities can be summarized as:
+
+```text
+MainWindow
+    │
+    ├── Coordinates application flow
+    ├── Handles WPF controls
+    ├── Displays processed frames
+    └── Draws histogram
+     
+WebcamService
+    └── Handles webcam interaction
+
+ImageProcessingService
+    └── Executes the ordered filter pipeline
+
+IImageProcessingFilter
+    └── Defines the contract used by all image filters
+
+Filter Implementations
+    └── Perform individual image-processing operations
+
+HistogramService
+    └── Creates and calculates the grayscale histogram
+```
+
+---
+
+## Processing Flow
+
+Each captured frame moves through the application using the following general flow:
+
+```text
 Capture Frame
-   │
-   ▼
-Apply Active Filters
-   │
-   ▼
-Create Grayscale Histogram Input
-   │
-   ▼
-Calculate Histogram
-   │
-   ├──────────────► Display Histogram
-   │
-   ▼
+     │
+     ▼
+Apply Active Filters in Pipeline Order
+     │
+     ▼
+Calculate Grayscale Histogram
+     │
+     ├──────────────► Draw Histogram
+     │
+     ▼
 Display Processed Frame
 ```
 
@@ -334,9 +408,17 @@ Grayscale → Blur → Invert
 
 will first convert the frame to grayscale, then blur it, and finally invert the resulting image.
 
+The same `Mat` is modified in place as it moves through the filter pipeline. After filter processing is complete, `MainWindow` continues using the processed frame for histogram calculation and display.
+
+The histogram calculation does not require the displayed frame itself to be grayscale. If the processed frame is still a color image, `HistogramService` creates a separate grayscale copy for histogram calculation.
+
+---
+
 ## Testing
 
 The project contains an xUnit test project covering core image-processing functionality.
+
+The automated tests focus on deterministic image-processing and histogram behavior. Webcam interaction and real-time WPF behavior are tested manually because they depend on physical hardware and UI interaction.
 
 ### Automated Tests
 
@@ -347,12 +429,17 @@ The current unit tests cover:
 * Histogram calculation returns 256 bins.
 * A uniform grayscale image produces the expected dominant intensity value.
 * Histogram behavior with multiple pixel values is tested.
+* A color image is converted to grayscale correctly for histogram calculation.
 
 #### Image Processing
 
 * Grayscale conversion changes a color image to a single-channel image.
 * Black & white thresholding produces the expected binary pixel values.
 * Multiple filters are applied sequentially and in the expected order.
+* Invert produces the expected inverted pixel value.
+* An empty filter pipeline leaves the image unchanged.
+
+The tests use small programmatically generated `Mat` images with known pixel values. This allows the expected results to be compared directly against the output of the processing and histogram services.
 
 ### Manual Testing
 
@@ -367,14 +454,41 @@ Manual testing includes:
 * Verifying that multiple filters are applied in pipeline order.
 * Adjusting blur, BW threshold, and edge-detection settings while the live feed is running.
 * Starting and stopping the webcam repeatedly to verify normal application behavior.
+* Verifying that the UI remains responsive while the webcam initializes.
+* Verifying that the application handles an unavailable webcam without crashing.
+* Verifying behavior when the webcam stops providing frames.
 
 The physical webcam and real-time UI are intentionally tested at the application level rather than mocked in the unit tests.
+
+For a larger application, webcam access could additionally be placed behind an interface so that a fake webcam implementation could provide predetermined frames for automated capture and live-view testing.
+
+---
 
 ## Assumptions and Design Decisions
 
 ### Development Environment
 
-The application targets Windows only, since WPF has no cross-platform runtime. Development assumes Visual Studio 2026 and the .NET 10 SDK are available; the .NET CLI is supported as an alternative for building, running, and testing outside the IDE.
+The application targets Windows only because WPF has no cross-platform runtime.
+
+Development assumes Visual Studio 2026 and the .NET 10 SDK are available. The .NET CLI is supported as an alternative for building, running, and testing outside the IDE.
+
+### Service Separation
+
+Webcam interaction, image processing, and histogram calculation are separated into dedicated services.
+
+`MainWindow` remains responsible for WPF-specific UI behavior and coordinating the application's processing flow.
+
+This keeps device interaction and image-processing logic separate from presentation logic without introducing additional architectural complexity beyond the scope of the project.
+
+### Filter Architecture
+
+All image filters implement `IImageProcessingFilter`.
+
+`ImageProcessingService` therefore operates on a `List<IImageProcessingFilter>` rather than containing conditional logic for every available filter type.
+
+Each concrete filter is responsible for its own processing behavior and configurable values.
+
+This design keeps the processing service independent of the individual filter implementations and allows additional filters to be introduced without changing the processing loop.
 
 ### Grayscale Histogram
 
@@ -398,22 +512,52 @@ or:
 Blur → Grayscale → Edge Detection
 ```
 
-The processing service checks the current number of image channels before performing grayscale conversion so that filters can be combined without repeatedly attempting to convert an already-grayscale image.
+Filters that require grayscale input check the current number of image channels before performing grayscale conversion. This allows filters to be combined without repeatedly attempting to convert an already-grayscale image.
+
+### In-Place Image Processing
+
+Filters operate on the same `Mat` frame and modify it in place.
+
+This keeps the processing pipeline simple because `MainWindow` can pass the captured frame through the filter pipeline and continue using that same frame for histogram calculation and display.
 
 ### UI Responsiveness
 
-The capture loop uses asynchronous delays to control the frame rate and allow the WPF UI to continue processing user interaction.
+Opening a webcam through OpenCV can be a synchronous operation and may take several seconds depending on the device and system.
+
+Webcam initialization is therefore performed on a background thread using `Task.Run()` and awaited by the capture loop. This prevents camera initialization from blocking the WPF UI thread.
+
+The capture loop also uses asynchronous delays to control the frame rate while allowing the WPF UI to continue processing user interaction.
 
 The current implementation prioritizes clarity and simplicity appropriate for the scope of this project.
+
+### Resource Management
+
+Objects that hold unmanaged image resources, such as `Mat`, `Bitmap`, and `VideoCapture`, are disposed when they are no longer needed.
+
+The webcam is stopped and released when the capture loop exits, including when the loop is cancelled or an error causes it to stop.
+
+---
 
 ## Sample Output
 
 Screenshots of the application running with the webcam feed, filters, and histogram are included with the project.
 
-These demonstrate the application's live-view functionality and image-processing output.
+These demonstrate:
+
+* Live webcam capture
+* Real-time histogram generation
+* Individual image filters
+* Multiple filters applied through the processing pipeline
+* Adjustable filter parameters
+
+---
 
 ## Summary
 
-The application demonstrates a real-time webcam processing pipeline using C#, WPF, and Emgu CV.
+The application demonstrates a real-time webcam image-processing pipeline using C#, WPF, and Emgu CV.
 
-The implementation separates webcam capture, image processing, and histogram calculation into dedicated services while keeping the WPF window responsible for coordinating the UI and application flow.
+The implementation separates webcam capture, image processing, filter implementations, and histogram calculation while keeping the WPF window responsible for coordinating UI and application flow.
+
+A common `IImageProcessingFilter` interface allows multiple concrete filters to participate in the same ordered processing pipeline, while dedicated services keep webcam interaction, image processing, and histogram calculation separated by responsibility.
+
+Automated xUnit tests validate deterministic image-processing and histogram behavior, while physical webcam and real-time UI behavior are verified through application-level testing.
