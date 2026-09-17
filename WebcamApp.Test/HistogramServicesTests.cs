@@ -13,7 +13,7 @@ public class HistogramServiceTests
         // Arrange
         var histogramService = new HistogramService();
 
-        using var testImage = new Mat(3, 3, DepthType.Cv8U, 1); // Create a 3x3 grayscale image
+        using var testImage = new Mat(3, 3, DepthType.Cv8U, 1);
         testImage.SetTo(new MCvScalar(128));
 
         // Act
@@ -66,6 +66,22 @@ public class HistogramServiceTests
         Assert.Equal(0.5f, histogram[64]);
         Assert.Equal(1.0f, histogram[128]);
         Assert.Equal(0.0f, histogram[255]);
+    }
 
+    [Fact]
+    public void CalculateHistogram_ColorImage_ShouldConvertToGrayscale()
+    {
+        // Arrange
+        var histogramService = new HistogramService();
+
+        using var testImage = new Mat(3, 3, DepthType.Cv8U, 3);
+        testImage.SetTo(new MCvScalar(100, 100, 100));
+
+        // Act
+        float[] histogram = histogramService.CalculateHistogram(testImage);
+
+        // Assert
+        Assert.Equal(256, histogram.Length);
+        Assert.Equal(1.0f, histogram[100]);
     }
 }

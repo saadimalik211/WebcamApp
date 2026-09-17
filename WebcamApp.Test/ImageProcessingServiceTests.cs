@@ -96,4 +96,49 @@ public class ImageProcessingServiceTests
         // Invert of 100 is 155 (255 - 100)
         Assert.Equal(155, pixelData[0]);
     }
+
+    [Fact]
+    public void ProcessImage_Invert_ShouldInvertPixelValue()
+    {
+        // Arrange
+        var imageProcessingService = new ImageProcessingService();
+
+        using var testImage = new Mat(1, 1, DepthType.Cv8U, 1);
+        testImage.SetTo(new MCvScalar(100));
+
+        var filters = new List<IImageProcessingFilter>
+        {
+            new InvertFilter()
+        };
+
+        // Act
+        imageProcessingService.ProcessImage(testImage, filters);
+
+        // Assert
+        byte[] pixelData = new byte[1];
+        testImage.CopyTo(pixelData);
+
+        Assert.Equal(155, pixelData[0]);
+    }
+
+    [Fact]
+    public void ProcessImage_NoFilters_ShouldNotModifyImage()
+    {
+        // Arrange
+        var imageProcessingService = new ImageProcessingService();
+
+        using var testImage = new Mat(1, 1, DepthType.Cv8U, 1);
+        testImage.SetTo(new MCvScalar(100));
+
+        var filters = new List<IImageProcessingFilter>();
+
+        // Act
+        imageProcessingService.ProcessImage(testImage, filters);
+
+        // Assert
+        byte[] pixelData = new byte[1];
+        testImage.CopyTo(pixelData);
+
+        Assert.Equal(100, pixelData[0]);
+    }
 }
