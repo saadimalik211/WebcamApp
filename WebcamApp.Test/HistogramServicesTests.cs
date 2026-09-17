@@ -65,5 +65,7 @@ public class HistogramServiceTests
         // Assert
         Assert.Equal(0.5f, histogram[64]);
         Assert.Equal(1.0f, histogram[128]);
+        Assert.Equal(0.0f, histogram[255]);
+
     }
 }
