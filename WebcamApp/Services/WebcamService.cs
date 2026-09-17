@@ -36,11 +36,29 @@ namespace WebcamApp.Services
         {
             var frame = new Mat();
 
-            if (_capture == null || !_capture.Read(frame) || frame.IsEmpty)
-            { 
+            // Is there a webcam?
+            if (_capture == null)
+            {
                 frame.Dispose();
                 return null;
             }
+
+            // Try to read a frame from the webcam
+            bool readSuccessful = _capture.Read(frame);
+
+            if (!readSuccessful)
+            {
+                frame.Dispose();
+                return null;
+            }
+
+            // Make sure the frame actually contains image data
+            if (frame.IsEmpty)
+            {
+                frame.Dispose();
+                return null;
+            }
+
             return frame;
         }
 
