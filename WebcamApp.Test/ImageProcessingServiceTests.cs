@@ -141,4 +141,4 @@ public class ImageProcessingServiceTests
 
         Assert.Equal(100, pixelData[0]);
     }
-}
+}   
