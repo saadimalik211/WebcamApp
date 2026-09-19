@@ -99,7 +99,7 @@ public partial class MainWindow : Window
                 // Display the processed frame
                 DisplayFrame(frame);
 
-                // Wait 33ms between frames, but stop the delay early if cancellation is requested
+                // Delay to control the frame rate
                 await Task.Delay(33, token);
             }
         }
