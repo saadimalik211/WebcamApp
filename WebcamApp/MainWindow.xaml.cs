@@ -29,7 +29,7 @@ public partial class MainWindow : Window
     private readonly List<IImageProcessingFilter> _availableFilters = new();
 
     // Ordered list of filters in the current pipeline
-    private readonly List<IImageProcessingFilter> _filterPipeline = new();
+    private readonly List<IImageProcessingFilter> _activeFilters = new();
 
     public MainWindow()
     {
@@ -90,7 +90,7 @@ public partial class MainWindow : Window
                 }
 
                 // Process and apply the filters in the pipeline
-                _imageProcessingService.ProcessImage(frame, _filterPipeline);
+                _imageProcessingService.ProcessImage(frame, _activeFilters);
 
                 // Calculate and draw the grayscale histogram
                 float[] histogram = _histogramService.CalculateHistogram(frame);
@@ -207,7 +207,7 @@ public partial class MainWindow : Window
         {
             IImageProcessingFilter selectedFilter = _availableFilters[selectedIndex];
 
-            _filterPipeline.Add(selectedFilter);
+            _activeFilters.Add(selectedFilter);
             FilterPipelineList.Items.Add(selectedFilter.GetDisplayName());
         }
     }
@@ -219,7 +219,7 @@ public partial class MainWindow : Window
         {
             int selectedIndex = FilterPipelineList.SelectedIndex;
 
-            _filterPipeline.RemoveAt(selectedIndex);
+            _activeFilters.RemoveAt(selectedIndex);
             FilterPipelineList.Items.RemoveAt(selectedIndex);
         }
     }
