@@ -3,6 +3,13 @@ using Emgu.CV.CvEnum;
 
 namespace WebcamApp.Services;
 
+public class ColorHistogram // Class to hold the color histogram data
+{
+    public float[] Blue { get; set; } = new float[256];
+    public float[] Green { get; set; } = new float[256];
+    public float[] Red { get; set; } = new float[256];
+}
+
 public class HistogramService
 {
     //histogram calculation method
@@ -46,4 +53,59 @@ public class HistogramService
 
         return histogram;
     }
+
+    public ColorHistogram CalculateColorHistogram(Mat frame)
+    {
+        using var blueHist = new Mat();
+        using var greenHist = new Mat();
+        using var redHist = new Mat();
+
+        using var images = new Emgu.CV.Util.VectorOfMat(frame);
+
+        // Calculate the blue channel histogram
+        CvInvoke.CalcHist(
+            images,
+            new[] { 0 },
+            null,
+            blueHist,
+            new[] { 256 },
+            new[] { 0.0f, 256.0f },
+            false);
+
+        // Calculate the green channel histogram
+        CvInvoke.CalcHist(
+            images,
+            new[] { 1 },
+            null,
+            greenHist,
+            new[] { 256 },
+            new[] { 0.0f, 256.0f },
+            false);
+
+        // Calculate the red channel histogram
+        CvInvoke.CalcHist(
+            images,
+            new[] { 2 },
+            null,
+            redHist,
+            new[] { 256 },
+            new[] { 0.0f, 256.0f },
+            false);
+
+        // Normalize each histogram to the range [0, 1]
+        CvInvoke.Normalize(blueHist, blueHist, 0.0, 1.0, NormType.MinMax);
+        CvInvoke.Normalize(greenHist, greenHist, 0.0, 1.0, NormType.MinMax);
+        CvInvoke.Normalize(redHist, redHist, 0.0, 1.0, NormType.MinMax);
+
+        var colorHistogram = new ColorHistogram();
+
+        blueHist.CopyTo(colorHistogram.Blue);
+        greenHist.CopyTo(colorHistogram.Green);
+        redHist.CopyTo(colorHistogram.Red);
+
+        return colorHistogram;
+    }
+
+
+
 }

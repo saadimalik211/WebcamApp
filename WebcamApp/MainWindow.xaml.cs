@@ -100,6 +100,19 @@ public partial class MainWindow : Window
                 float[] histogram = _histogramService.CalculateHistogram(frame);
                 DrawHistogram(histogram);
 
+                // If the processed frame is still color, also calculate and draw the BGR histogram
+                if (frame.NumberOfChannels == 3)
+                {
+                    ColorHistogram colorHistogram =
+                        _histogramService.CalculateColorHistogram(frame);
+
+                    DrawColorHistogram(colorHistogram);
+                }
+                else
+                {
+                    ColorHistogramCanvas.Children.Clear();
+                }
+
                 // Display the processed frame
                 DisplayFrame(frame);
 
@@ -148,6 +161,58 @@ public partial class MainWindow : Window
             // Add the bar to the histogram canvas
             HistogramCanvas.Children.Add(bar);
         }
+    }
+
+    // Draw the blue, green, and red channel histograms
+    private void DrawColorHistogram(ColorHistogram histogram)
+    {
+        // Clear the existing color histogram
+        ColorHistogramCanvas.Children.Clear();
+
+        var blueLine = new System.Windows.Shapes.Polyline
+        {
+            Stroke = System.Windows.Media.Brushes.Blue,
+            StrokeThickness = 2
+        };
+
+        var greenLine = new System.Windows.Shapes.Polyline
+        {
+            Stroke = System.Windows.Media.Brushes.Green,
+            StrokeThickness = 2
+        };
+
+        var redLine = new System.Windows.Shapes.Polyline
+        {
+            Stroke = System.Windows.Media.Brushes.Red,
+            StrokeThickness = 2
+        };
+
+        // Create one point for each intensity value from 0 to 255
+        for (int i = 0; i < 256; i++)
+        {
+            double x = i * ColorHistogramCanvas.ActualWidth / 255;
+
+            double blueY =
+                ColorHistogramCanvas.ActualHeight -
+                (histogram.Blue[i] * ColorHistogramCanvas.ActualHeight);
+
+            double greenY =
+                ColorHistogramCanvas.ActualHeight -
+                (histogram.Green[i] * ColorHistogramCanvas.ActualHeight);
+
+            double redY =
+                ColorHistogramCanvas.ActualHeight -
+                (histogram.Red[i] * ColorHistogramCanvas.ActualHeight);
+
+            blueLine.Points.Add(new System.Windows.Point(x, blueY));
+            greenLine.Points.Add(new System.Windows.Point(x, greenY));
+            redLine.Points.Add(new System.Windows.Point(x, redY));
+        }
+
+        // Add the three histogram lines to the canvas
+        ColorHistogramCanvas.Children.Add(blueLine);
+        ColorHistogramCanvas.Children.Add(greenLine);
+        ColorHistogramCanvas.Children.Add(redLine);
     }
 
     // Convert an OpenCV Mat to a WPF-compatible image and display it
