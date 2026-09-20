@@ -25,10 +25,14 @@ public partial class MainWindow : Window
     private readonly BlackWhiteFilter _blackWhiteFilter = new();
     private readonly EdgeDetectionFilter _edgeDetectionFilter = new();
 
+    // Available non-configurable filters
+    private readonly GrayscaleFilter _grayscaleFilter = new();
+    private readonly InvertFilter _invertFilter = new();
+
     // Available filters
     private readonly List<IImageProcessingFilter> _availableFilters = new();
 
-    // Ordered list of filters in the current pipeline
+    // Ordered list of active filters
     private readonly List<IImageProcessingFilter> _activeFilters = new();
 
     public MainWindow()
@@ -43,11 +47,11 @@ public partial class MainWindow : Window
         StopButton.IsEnabled = false;
 
         // Create the available filters
-        _availableFilters.Add(new GrayscaleFilter());
+        _availableFilters.Add(_grayscaleFilter);
         _availableFilters.Add(_blackWhiteFilter);
         _availableFilters.Add(_blurFilter);
         _availableFilters.Add(_edgeDetectionFilter);
-        _availableFilters.Add(new InvertFilter());
+        _availableFilters.Add(_invertFilter);
 
         // Display the filter names in the UI
         foreach (var filter in _availableFilters)
