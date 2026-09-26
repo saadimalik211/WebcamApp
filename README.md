@@ -23,6 +23,111 @@ The main goals of the implementation are:
 
 ---
 
+---
+## Mermaid Diagram
+```mermaid
+classDiagram
+
+    class MainWindow {
+        -WebcamService _webcamService
+        -HistogramService _histogramService
+        -ImageProcessingService _imageProcessingService
+        -CancellationTokenSource _cancellationTokenSource
+        -bool _isRunning
+        -List~IImageProcessingFilter~ _availableFilters
+        -List~IImageProcessingFilter~ _filterPipeline
+
+        +MainWindow()
+        -MainWindow_Closing(sender, e) void
+        -CaptureLoop(token) Task
+        -DrawHistogram(histogram) void
+        -DrawColorHistogram(histogram) void
+        -DisplayFrame(frame) void
+        -StartWebcam_Click(sender, e) void
+        -StopWebcam_Click(sender, e) void
+        -AddFilter_Click(sender, e) void
+        -RemoveFilter_Click(sender, e) void
+        -BlurSlider_ValueChanged(sender, e) void
+        -EdgeLowerSlider_ValueChanged(sender, e) void
+        -EdgeUpperSlider_ValueChanged(sender, e) void
+        -BWThresholdSlider_ValueChanged(sender, e) void
+    }
+
+    class WebcamService {
+        -VideoCapture _capture
+        +Start() bool
+        +CaptureFrame() Mat
+        +Stop() void
+    }
+
+    class HistogramService {
+        +CalculateHistogram(frame) float[]
+        +CalculateColorHistogram(frame) ColorHistogram
+    }
+
+    class ColorHistogram {
+        +float[] Blue
+        +float[] Green
+        +float[] Red
+    }
+
+    class ImageProcessingService {
+        +ProcessImage(frame, filters) void
+    }
+
+    class IImageProcessingFilter {
+        <<interface>>
+        +GetDisplayName() string
+        +ProcessImage(frame) void
+    }
+
+    class GrayscaleFilter {
+        +GetDisplayName() string
+        +ProcessImage(frame) void
+    }
+
+    class BlackWhiteFilter {
+        +double ThresholdValue
+        +GetDisplayName() string
+        +ProcessImage(frame) void
+    }
+
+    class BlurFilter {
+        +double BlurValue
+        +GetDisplayName() string
+        +ProcessImage(frame) void
+    }
+
+    class EdgeDetectionFilter {
+        +double LowerThreshold
+        +double UpperThreshold
+        +GetDisplayName() string
+        +ProcessImage(frame) void
+    }
+
+    class InvertFilter {
+        +GetDisplayName() string
+        +ProcessImage(frame) void
+    }
+
+    MainWindow --> WebcamService : uses
+    MainWindow --> HistogramService : uses
+    MainWindow --> ImageProcessingService : uses
+    MainWindow --> IImageProcessingFilter : manages pipeline
+
+    HistogramService --> ColorHistogram : creates
+    ImageProcessingService --> IImageProcessingFilter : applies
+
+    IImageProcessingFilter <|.. GrayscaleFilter : implements
+    IImageProcessingFilter <|.. BlackWhiteFilter : implements
+    IImageProcessingFilter <|.. BlurFilter : implements
+    IImageProcessingFilter <|.. EdgeDetectionFilter : implements
+    IImageProcessingFilter <|.. InvertFilter : implements
+```
+
+
+---
+
 ## Features
 
 ### Live Webcam
